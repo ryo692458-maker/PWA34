@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f1f5f9">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>競輪AI KAI-X (Ultimate Pro)</title>
+<style>
+/* KAI-X Ultimate Design System */
+:root{
+  --bg:#f8fafc; --card:#ffffff; --text:#1e293b; --muted:#64748b;
+  --prim:#2563eb; --prim-dark:#1d4ed8; 
+  --navy:#1e293b; --navy-hover:#0f172a; 
+  --pink:#fce7f3; --pink-text:#be185d; 
+  --orange-bg:#ffedd5; --orange-text:#c2410c; 
+  --yellow-bg:#fef3c7; --yellow-text:#b45309; 
+  --green-bg:#f0fdf4; --green-text:#15803d; 
+  --err:#ef4444; --line:#e2e8f0;
+}
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+body{margin:0;background:var(--bg);color:var(--text);font-size:14px;padding-bottom:80px;-webkit-font-smoothing:antialiased}
+.container{max-width:640px;margin:0 auto;padding:12px}
+
+/* Headers */
+h1{font-size:1.1rem;margin:0 0 16px;color:#0f172a;font-weight:800;display:flex;align-items:center}
+.badge-ver{background:#1e293b;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.7rem;margin-left:8px;}
+
+/* Cards */
+.card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05);border:1px solid var(--line)}
+.card h2{font-size:0.9rem;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;color:#334155;font-weight:700}
+.card h3{font-size:0.95rem;margin:0 0 12px;color:#1e293b;font-weight:700;display:flex;align-items:center}
+
+/* Metadata UI */
+.meta-row { display: flex; align-items: baseline; margin-bottom: 6px; font-size: 13px; }
+.meta-label { width: 80px; color: var(--text); font-weight: 700; flex-shrink: 0; }
+.meta-val { flex-grow: 1; color: #334155; transition: background 0.3s; border-radius: 4px; padding: 0 4px;}
+
+/* .tag-orange: 常時表示用にdisplayプロパティを調整 */
+.tag-orange { background: var(--orange-bg); color: var(--orange-text); font-weight: 700; }
+.tag-type { background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; display:inline-block;}
+
+/* Status Badge */
+.status-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; background: #e2e8f0; color: #64748b; margin-bottom: 12px; }
+.status-badge.ok { background: #dbeafe; color: #1d4ed8; }
+
+/* Data Table */
+.data-table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin-top: 10px; 
+  font-size: 11px; 
+  table-layout: fixed; 
+}
+.data-table th { 
+  background: #f1f5f9; 
+  color: #64748b; 
+  font-weight: 600; 
+  padding: 6px 2px; 
+  text-align: center; 
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.data-table td { 
+  padding: 6px 2px; 
+  border: 1px solid var(--line); 
+  text-align: center; 
+  color: #334155; 
+  white-space: nowrap; 
+  overflow: hidden;
+}
+.data-table col:nth-child(1) { width: 8%; }  /* 車 */
+.data-table col:nth-child(2) { width: 22%; } /* 選手名 */
+.data-table col:nth-child(3) { width: 10%; } /* 指数 */
+.data-table col:nth-child(4) { width: 14%; } /* 勝率 */
+.data-table col:nth-child(5) { width: 11%; } /* S */
+.data-table col:nth-child(6) { width: 11%; } /* H */
+.data-table col:nth-child(7) { width: 11%; } /* B */
+.data-table col:nth-child(8) { width: 13%; } /* T */
+
+.data-table td:nth-child(2) { 
+  text-align: left; 
+  padding-left: 4px; 
+  font-weight: 600;
+  text-overflow: ellipsis; 
+}
+.val-idx { color: #d97706; font-weight: 800; } 
+
+/* Learning System UI */
+.learn-sec { margin-top: 20px; border-top: 2px solid var(--line); padding-top: 16px; }
+.learn-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.learn-title { font-weight: 800; font-size: 0.95rem; color: #1e293b; }
+.data-count { background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; }
+
+.save-info-box { 
+  display: block; 
+  background: var(--green-bg); 
+  border: 1px solid #bbf7d0; 
+  border-radius: 6px; 
+  padding: 10px; 
+  margin-bottom: 12px; 
+}
+.save-row { display: flex; margin-bottom: 4px; font-size: 12px; }
+.save-label { width: 80px; color: var(--green-text); font-weight: 700; }
+.save-val { color: #1e293b; font-weight: 500; }
+
+.btn-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+.btn-navy { background: var(--navy); color: #fff; border: none; border-radius: 6px; padding: 8px 12px; font-weight: 700; font-size: 12px; cursor: pointer; flex: 1; }
+.btn-navy:hover { background: var(--navy-hover); }
+.btn-outline { background: #fff; border: 1px solid #cbd5e1; color: #475569; border-radius: 6px; padding: 8px 12px; font-weight: 700; font-size: 12px; cursor: pointer; }
+.btn-pink { background: var(--pink); color: var(--pink-text); border: none; border-radius: 6px; padding: 6px 12px; font-weight: 700; font-size: 11px; cursor: pointer; }
+
+/* Inputs & Buttons */
+textarea{width:100%;min-height:80px;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px;resize:vertical;background:#f8fafc;}
+textarea:focus{outline:none;border-color:var(--prim);background:#fff;}
+
+/* 予想ボタン */
+button.pred-btn { 
+  flex: 1; 
+  padding: 12px; 
+  border: none; 
+  border-radius: 6px; 
+  font-weight: 700; 
+  cursor: pointer; 
+  font-size: 13px; 
+  opacity: 0.6; 
+  transform: scale(0.98);
+  transition: all 0.2s ease;
+}
+button.pred-btn.active-mode {
+  opacity: 1;
+  transform: scale(1.02);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+  filter: brightness(1.1);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+button.primary{background:var(--prim);color:#fff;}
+button.acc{background:#f59e0b;color:#fff;}
+
+button.small{padding:2px 8px;font-size:11px;height:24px;border:1px solid #cbd5e1;background:#fff;border-radius:4px;cursor:pointer}
+button:disabled{opacity:0.3;cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* Standard UI Elements */
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mt{margin-top:12px}
+.mono{font-family:monospace}
+input[type="checkbox"]{accent-color:var(--prim);width:16px;height:16px;margin:0}
+input[type="number"]{width:50px;border:1px solid var(--line);border-radius:4px;padding:4px;text-align:center}
+.chk-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;cursor:pointer}
+
+/* Prediction Output */
+.prediction-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+.prediction-table th { background: #f1f5f9; padding: 6px; text-align: center; border-bottom: 1px solid var(--line); font-size: 11px; }
+.prediction-table td { 
+  padding: 0 4px; 
+  border-bottom: 1px solid var(--line); 
+  text-align: center; 
+  height: 36px; 
+  vertical-align: middle;
+}
+.win-row { background: #fffbeb; }
+
+/* 推測バッジ */
+.tag-est { 
+  display: inline-block; 
+  padding: 1px 6px; 
+  border-radius: 4px; 
+  font-size: 10px; 
+  background: #fef08a; 
+  color: #854d0e; 
+  border: 1px solid #eab308;
+  font-weight: 800;
+  margin-left: 4px;
+}
+
+.judge-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #64748b;
+  min-width: 36px;
+}
+.judge-badge.fire { background: #fee2e2; color: #dc2626; border:1px solid #fecaca; }
+.judge-badge.ok { background: #dbeafe; color: #1d4ed8; border:1px solid #bfdbfe; }
+
+/* Toast Notification Styles */
+#toast {
+  visibility: hidden;
+  min-width: 250px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 8px;
+  padding: 12px;
+  position: fixed;
+  z-index: 9999;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.5s, bottom 0.5s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+#toast.show {
+  visibility: visible;
+  opacity: 1;
+  bottom: 50px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>競輪AI KAI-X <span class="badge-ver">鬼Ver.2.1</span></h1>
+
+  <div class="card">
+    <h2>① netkeirin (AI指数/結果) <button id="parse1" class="small">クリア</button></h2>
+    <textarea id="sec1" placeholder="ここに①(netkeirin または AI指数)をペースト"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>② 楽天Ｋドリームス (並び/詳細) <button id="parse2" class="small">クリア</button></h2>
+    <textarea id="sec2" placeholder="ここに②(楽天Kドリ)をペースト"></textarea>
+  </div>
+
+  <div class="card">
+    <h3>③ 統合データ解析</h3>
+    <div id="statusBadge" class="status-badge">データ待ち</div>
+    <div id="errMsg" style="color:var(--err);font-size:11px;display:none;font-weight:bold;margin-bottom:8px;"></div>
+
+    <div id="previewArea">
+      <div class="meta-row"><div class="meta-label">日付/場所</div><div class="meta-val tag-orange" id="dispDateVenue">—</div></div>
+      <div class="meta-row"><div class="meta-label">バンク</div><div class="meta-val tag-orange" id="dispBank">—</div></div>
+      <div class="meta-row"><div class="meta-label">戦型</div><div class="meta-val"><span id="dispType" class="tag-type">—</span></div></div>
+      <div class="meta-row"><div class="meta-label">並び</div><div class="meta-val mono" id="dispLine">—</div></div>
+      <div class="meta-row"><div class="meta-label">着順</div><div class="meta-val" id="dispResult" style="font-weight:bold; letter-spacing:1px;">—</div></div>
+      <div class="meta-row"><div class="meta-label">オッズ例</div><div class="meta-val" id="dispOdds" style="font-size:11px;color:#64748b">—</div></div>
+
+      <table class="data-table" id="pTable">
+        <colgroup><col><col><col><col><col><col><col><col></colgroup>
+        <thead><tr><th>車</th><th>選手</th><th>指数</th><th>勝率</th><th>S</th><th>H</th><th>B</th><th>T</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="learn-sec">
+        <div class="learn-header">
+          <div class="learn-title">学習システム</div>
+          <div class="data-count">データ数:<span id="learnCount">0</span></div>
+        </div>
+        <div id="saveInfoBox" class="save-info-box">
+          <div class="save-row"><div class="save-label">保存日時</div><div class="save-val" id="lsTime">—</div></div>
+          <div class="save-row"><div class="save-label">日付/場所</div><div class="save-val" id="lsVenue">—</div></div>
+        </div>
+        <div class="btn-row">
+          <button id="btnSave" class="btn-navy" disabled>このレースを学習保存</button>
+          <button id="btnExport" class="btn-outline">データ出力</button>
+        </div>
+        <div class="row" style="margin-bottom:8px;">
+          <input type="file" id="fileImp" accept=".json" style="font-size:11px;">
+        </div>
+        <div class="row">
+           <select id="selDel" style="font-size:12px;padding:4px;border:1px solid #ccc;border-radius:4px;max-width:140px;"></select>
+           <button id="btnDelOne" class="btn-pink">削除</button>
+           <button id="btnDelAll" class="btn-pink">全削除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>④ 鬼の予想生成</h3>
+    <div class="row" style="margin-bottom:12px; justify-content:space-between; background:#f1f5f9; padding:8px; border-radius:6px">
+      <div class="row"><label class="chk-label">点数 <input type="number" id="numPicks" value="30"></label></div>
+      <div class="row">
+        <label class="chk-label"><input type="checkbox" id="ckDev" checked> 展開補正</label>
+        <label class="chk-label"><input type="checkbox" id="ckBank" checked> バンク特性</label>
+        <label class="chk-label"><input type="checkbox" id="ckEst" checked> 推定オッズ</label>
+      </div>
+    </div>
+    <div class="row" style="gap:10px">
+      <button id="btnKelly" class="pred-btn primary" disabled><div>回収率重視 (Pro)</div><div style="font-size:10px;opacity:0.8;font-weight:400">期待値 > 1.0 を狙い撃つ</div></button>
+      <button id="btnHit" class="pred-btn acc" disabled><div>的中率重視</div><div style="font-size:10px;opacity:0.8;font-weight:400">堅実なライン決着狙い</div></button>
+    </div>
+    <div id="predOut"></div>
+  </div>
+</div>
+
+<div id="toast">処理が完了しました</div>
+
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+const VENUES = "函館|青森|いわき平|弥彦|前橋|取手|宇都宮|大宮|西武園|京王閣|立川|松戸|千葉|川崎|平塚|小田原|伊東|静岡|名古屋|岐阜|大垣|豊橋|富山|松阪|四日市|福井|奈良|向日町|和歌山|岸和田|玉野|広島|防府|高松|小松島|高知|松山|小倉|久留米|武雄|佐世保|別府|熊本".split('|');
+const BANK_DATA = {'函館':[51.3,400],'青森':[58.9,400],'いわき平':[62.7,400],'弥彦':[63.1,400],'前橋':[46.7,335],'取手':[54.8,400],'宇都宮':[63.3,500],'大宮':[66.7,500],'西武園':[47.6,400],'京王閣':[51.5,400],'立川':[58.0,400],'松戸':[38.2,333],'千葉':[0,250],'川崎':[58.0,400],'平塚':[54.2,400],'小田原':[36.1,333],'伊東':[46.6,333],'静岡':[56.4,400],'名古屋':[58.8,400],'岐阜':[59.3,400],'大垣':[56.0,400],'豊橋':[60.3,400],'富山':[43.0,333],'松阪':[61.9,400],'四日市':[62.4,400],'福井':[52.8,400],'奈良':[38.0,333],'向日町':[47.3,400],'和歌山':[59.9,400],'岸和田':[56.7,400],'玉野':[47.9,400],'広島':[57.9,400],'防府':[42.5,333],'高松':[54.4,400],'小松島':[55.5,400],'高知':[52.0,500],'松山':[58.6,400],'小倉':[56.9,400],'久留米':[50.7,400],'武雄':[64.4,400],'佐世保':[40.2,400],'別府':[59.9,400],'熊本':[69.5,500]};
+
+let data1 = null, data2 = null, unified = null;
+
+/* UTILS */
+function showToast(message) {
+  const x = document.getElementById("toast");
+  x.textContent = message;
+  x.className = "show";
+  setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+}
+
+function normDate(txt) {
+  let m = txt.match(/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/);
+  if(m) return {y:m[1], m:m[2].padStart(2,'0'), d:m[3].padStart(2,'0'), str:`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`};
+  m = txt.match(/(\d{1,2})[\/\-月](\d{1,2})日?/);
+  if(m) return {y:null, m:m[1].padStart(2,'0'), d:m[2].padStart(2,'0'), str:`????-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`};
+  return null;
+}
+function getVenue(txt) {
+  const head = txt.substring(0, 800);
+  for(let v of VENUES) { if(new RegExp(`${v}\\s*[\\n\\r]*\\s*\\d{1,2}R`).test(head)) return v; }
+  for(let v of VENUES) { if(head.includes(v)) return v; }
+  return null;
+}
+
+/* PARSE 1 */
+function parse1(txt) {
+  const d = normDate(txt);
+  const venue = getVenue(txt);
+  const rM = txt.match(/(\d{1,2})R/);
+  const race = rM ? rM[1] : null;
+  
+  let rows = [];
+  let lines = txt.split('\n');
+  let type = 'B';
+  const regexA = /^\s*(\d)\s+([^\s]+).+?(\d+)\s+(\d+\.\d+)%\s+(\d+\.\d+)%\s+(\d+\.\d+)%\s+(\d+\.\d+)%/;
+  const regexB = /^\s*(\d+)\s+(\d+)\s+(\d)\s+([^\s]+)/;
+  
+  lines.forEach(l => {
+    let m = l.match(regexA);
+    if(m) {
+      type = 'A';
+      rows.push({car:+m[1], name:m[2], index:+m[3], win:+m[4]/100, S:+m[5]/100, H:+m[6]/100, B:+m[7]/100, score:0});
+    } else {
+      m = l.match(regexB);
+      if(m) rows.push({car:+m[3], name:m[4], index:+m[2], win:0, S:0, H:0, B:0, score:0});
+    }
+  });
+
+  let result=[];
+  const resM = /レース結果([\s\S]+)/.exec(txt);
+  if(resM){
+    const raw = resM[1].split(/\r?\n/).map(s=>s.replace(/\t/g,' ').replace(/ {2,}/g,' ').trim());
+    let pend=null;
+    for(const ln of raw){
+      if(!ln) continue;
+      if(/^(見解|ウマい|指数|AI指数の使い方|この予想家|※S：|車番\s*選手名|買い目|並び予想|払い戻し)/.test(ln)) break;
+      let m = ln.match(/^\s*([1-9])\s+(?:\S+\s+)?([1-9])\b/);
+      if(m){ result[+m[1]-1]=+m[2]; pend=null; continue; }
+      if(pend!=null){
+        m = ln.match(/^\s*(?:\S+\s+)?([1-9])\b/);
+        if(m){ result[pend-1]=+m[1]; pend=null; continue; }
+      }
+      m = ln.match(/^\s*([1-9])\s*$/);
+      if(m){ pend=+m[1]; continue; }
+    }
+  }
+  result = result.filter(x => x);
+  return { venue, date: d, race, rows, result, type };
+}
+
+/* PARSE 2 */
+function parse2(txt) {
+  const d = normDate(txt);
+  const venue = getVenue(txt);
+  const rM = txt.match(/(\d{1,2})R/);
+  const race = rM ? rM[1] : null;
+  let lines = [];
+  let lineM = txt.match(/[←<=]\s*([^\n]+)/);
+  if(lineM) {
+    let raw = lineM[1].trim();
+    lines = raw.split(/\s{2,}/).map(g => g.replace(/\s+/g, '-'));
+    if(lines.length === 1 && raw.includes('/')) lines = raw.split('/').map(x => x.trim().replace(/\s+/g, '-'));
+  }
+  let odds = [];
+  let re = /(\d+)\s+(\d-\d-\d)\s+([\d\.]+)/g;
+  let m;
+  while((m = re.exec(txt)) !== null) odds.push({ rank: +m[1], c: m[2], o: +m[3] });
+  if(odds.length === 0) {
+      let re2 = /(\d-\d-\d)\s+([\d\.]+)/g;
+      while((m = re2.exec(txt)) !== null) odds.push({ rank: 0, c: m[1], o: +m[2] });
+  }
+  const scoreMap = {};
+  let lastCar = null;
+  const scoreRe = /[A-S][1-3]\s+(\d{2,3}\.\d{2})/;
+  txt.split('\n').forEach(l => {
+     let cm = l.match(/^\s*\d+\s+(\d+)\s+[^\s\d]+/);
+     if(cm) lastCar = +cm[1]; else { let cm2=l.match(/^\s*(\d+)\s+[^\s\d]+/); if(cm2&&!l.includes('R')) lastCar=+cm2[1]; }
+     let sm = l.match(scoreRe);
+     if(sm && lastCar) scoreMap[lastCar] = +sm[1];
+  });
+  return { venue, date: d, race, lines, odds, scoreMap };
+}
+
+function inferStats(rows) {
+  rows.forEach(r => {
+    if(r.win === 0 && r.index > 0) {
+      let p = r.index / 500; 
+      r.win = parseFloat(p.toFixed(3)); r.S = r.index>100?0.2:0.05; r.H = r.index>100?0.1:0.02; r.B = r.index>100?0.1:0.02;
+    }
+  });
+  return rows;
+}
+
+/* MAIN LOGIC - FIXED TYPE CLEAR & ORANGE DISPLAY */
+function doUnify() {
+  const s = document.getElementById('statusBadge');
+  const e = document.getElementById('errMsg');
+  const bSave = document.getElementById('btnSave');
+  const bKelly = document.getElementById('btnKelly');
+  const bHit = document.getElementById('btnHit');
+  const tb = document.querySelector('#pTable tbody');
+  
+  // UI要素のリセット
+  e.style.display='none';
+  bSave.disabled = true;
+  bKelly.disabled = true; bKelly.classList.remove('active-mode');
+  bHit.disabled = true; bHit.classList.remove('active-mode');
+  
+  // プレビュー表示変数の準備
+  let displayRows = [];
+  let displayLines = [];
+  let displayOdds = [];
+  let displayResult = [];
+  let displayScoreMap = {};
+  
+  // ①があれば基本情報をセット
+  if(data1 && data1.rows.length > 0) {
+     let tempRows = JSON.parse(JSON.stringify(data1.rows)); // Deep copy
+     if(data1.type === 'B') tempRows = inferStats(tempRows);
+     displayRows = tempRows;
+     if(data1.result) displayResult = data1.result;
+  }
+  
+  // ②があれば並び・オッズ・競走得点などをセット
+  if(data2) {
+    if(data2.lines) displayLines = data2.lines;
+    if(data2.odds) displayOdds = data2.odds;
+    if(data2.scoreMap) displayScoreMap = data2.scoreMap;
+  }
+  
+  // テーブルの更新 (片方だけでもあれば表示)
+  tb.innerHTML = '';
+  displayRows.forEach(r => {
+    // スコア(競走得点)のマージ
+    if(displayScoreMap[r.car]) r.score = displayScoreMap[r.car];
+    
+    let tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.car}</td><td>${r.name}</td><td class="val-idx">${r.index||'0'}</td>
+    <td>${(r.win!==undefined)?r.win.toFixed(3):'0.000'}</td><td>${(r.S!==undefined)?r.S.toFixed(3):'0.000'}</td><td>${(r.H!==undefined)?r.H.toFixed(3):'0.000'}</td><td>${(r.B!==undefined)?r.B.toFixed(3):'0.000'}</td>
+    <td>${(r.score!==undefined)?r.score.toFixed(2):'0.00'}</td>`;
+    tb.appendChild(tr);
+  });
+
+  // その他の情報の即時表示 (Date/Venue/Bank以外)
+  let senkouCount = displayRows.filter(r => r.B > 0.1 || r.index > 100).length;
+  
+  // ★修正: データがない場合(クリア時)は、戦型もクリアする
+  if(displayRows.length === 0) {
+      document.getElementById('dispType').textContent = '—';
+  } else {
+      document.getElementById('dispType').textContent = senkouCount >= 3 ? '細切れ' : (senkouCount===2?'二分戦':'先行一車');
+  }
+
+  document.getElementById('dispLine').textContent = '← ' + (displayLines.length ? displayLines.join(' / ') : '—');
+  document.getElementById('dispResult').textContent = (displayResult.length ? displayResult.join('-') : '—');
+  let oddsTxt = displayOdds.slice(0, 3).map(o => `${o.c}:${o.o}`).join('  ');
+  document.getElementById('dispOdds').textContent = oddsTxt || 'なし';
+
+  // --- ここから照合ロジック ---
+  unified = null;
+  const dvElem = document.getElementById('dispDateVenue');
+  const bkElem = document.getElementById('dispBank');
+  
+  // デフォルトはリセット (照合前は日付などを隠す、または未確定とする)
+  // ★修正: tag-orange クラスの操作を削除（常時付与のため）
+  dvElem.textContent = '—'; 
+  bkElem.textContent = '—'; 
+  
+  if(!data1 && !data2) {
+    s.textContent = 'データ待ち'; s.className='status-badge';
+    return;
+  }
+  
+  if(!data1 || !data2) {
+     s.textContent = '片側データ入力中'; s.className='status-badge';
+     return;
+  }
+
+  // 両方ある場合の照合チェック
+  let d1s = data1.date ? data1.date.str : '---';
+  let v1 = data1.venue ? data1.venue : '---';
+  let r1 = data1.race ? data1.race : '-';
+  let d2s = data2.date ? data2.date.str : '---';
+  let v2 = data2.venue ? data2.venue : '---';
+  let r2 = data2.race ? data2.race : '-';
+  
+  // 年補完
+  if(data1.date && !data1.date.y && data2.date && data2.date.y) {
+      data1.date.y = data2.date.y;
+      data1.date.str = `${data1.date.y}-${data1.date.m}-${data1.date.d}`;
+      d1s = data1.date.str;
+  }
+
+  const vMatch = data1.venue === data2.venue;
+  const rMatch = parseInt(data1.race) === parseInt(data2.race);
+  let dMatch = true;
+  if(data1.date && data1.date.y && data2.date && data2.date.y) dMatch = (data1.date.str === data2.date.str);
+  else if (data1.date && data2.date) dMatch = (data1.date.m === data2.date.m && data1.date.d === data2.date.d);
+
+  if(!vMatch || !rMatch || !dMatch) { 
+    s.textContent='照合不一致'; 
+    s.className='status-badge';
+    e.style.display='block';
+    e.textContent = `#照合待機/エラー: ①${d1s} ${v1} ${r1}R ↔ ②${d2s} ${v2} ${r2}R`;
+    return; 
+  }
+
+  // 照合成功
+  const hasResult = displayResult.length >= 2;
+  s.textContent = hasResult ? '学習可能 (結果あり)' : '解析完了 (結果なし)';
+  s.className = hasResult ? 'status-badge ok' : 'status-badge';
+  
+  // Unifiedデータ作成
+  unified = { date: data1.date ? data1.date.str : '????-??-??', venue: data1.venue, race: data1.race, rows: displayRows, lines: displayLines, odds: displayOdds, result: displayResult };
+
+  // 日付・場所・バンクの確定表示
+  dvElem.textContent = `${unified.date} ${unified.venue} ${unified.race}R`;
+  
+  let bank = BANK_DATA[unified.venue];
+  bkElem.textContent = bank ? `${bank[1]}バンク (${bank[0]}m)` : '不明';
+
+  bSave.disabled = !hasResult;
+  bKelly.disabled = false; bHit.disabled = false;
+}
+
+/* PREDICT */
+function predict(mode) {
+  if(!unified) return;
+  const out = document.getElementById('predOut');
+  
+  // ボタンのアクティブ表示切替
+  const btnK = document.getElementById('btnKelly');
+  const btnH = document.getElementById('btnHit');
+  if(mode === 'kelly') { btnK.classList.add('active-mode'); btnH.classList.remove('active-mode'); }
+  else { btnH.classList.add('active-mode'); btnK.classList.remove('active-mode'); }
+
+  // 画面ブレ防止: コンテナの高さを一時的に固定
+  const currentHeight = out.offsetHeight;
+  if(currentHeight > 0) out.style.minHeight = currentHeight + 'px';
+
+  out.innerHTML = '<div class="status-badge">展開分析中...</div>';
+  
+  setTimeout(() => {
+    let cars = unified.rows.map(r=>r.car);
+    let combs = [];
+    const perm = (arr, m = []) => { if (m.length === 3) { combs.push(m); return; } for (let i = 0; i < arr.length; i++) { let curr = arr.slice(); let next = curr.splice(i, 1); perm(curr, m.concat(next)); }};
+    perm(cars); 
+    const useBank=document.getElementById('ckBank').checked, useDev=document.getElementById('ckDev').checked;
+    const bankInfo = BANK_DATA[unified.venue]; 
+    let bankBias = { sengo: 1.0, makuri: 1.0, sashi: 1.0 };
+    if(useBank && bankInfo) {
+      const [straight, len] = bankInfo;
+      if (len === 333 || straight < 40) { bankBias.sengo = 1.35; bankBias.sashi = 0.8; } 
+      else if (len === 500 || straight > 58) { bankBias.sengo = 0.8; bankBias.sashi = 1.25; }
+    }
+    let carLineInfo = {}; unified.lines.forEach((lineStr, grpIdx) => { let members = lineStr.split('-').map(Number); members.forEach((c, idx) => { carLineInfo[c] = { group: grpIdx, pos: idx, total: members.length }; }); });
+    let totalScore = 0;
+    let scoredCombs = combs.map(c => {
+      let [c1, c2, c3] = c;
+      let r1 = unified.rows.find(x=>x.car===c1), r2 = unified.rows.find(x=>x.car===c2), r3 = unified.rows.find(x=>x.car===c3);
+      let l1 = carLineInfo[c1]||{group:-1,pos:-1}, l2 = carLineInfo[c2]||{group:-1,pos:-1}, l3 = carLineInfo[c3]||{group:-1,pos:-1};
+      let p1 = Math.max(r1.win, 0.01), p2 = Math.max(r2.win, 0.01), p3 = Math.max(r3.win, 0.01);
+      let rawPower = p1 * (p2 * 0.8) * (p3 * 0.6);
+      let tenkaiBonus = 1.0;
+      if(useDev) {
+        if (l1.group!==-1 && l1.group===l2.group) {
+          if (l1.pos < l2.pos) { tenkaiBonus *= 1.8; if(bankBias.sengo > 1.0) tenkaiBonus *= 1.2; }
+          else if (l1.pos > l2.pos) { if (bankBias.sashi > 1.0 || r1.win > (r2.win + 0.1)) tenkaiBonus *= 1.6; else tenkaiBonus *= 0.7; }
+          if (l2.group === l3.group) tenkaiBonus *= 1.3;
+        } else { tenkaiBonus *= 0.5; if (r1.B > 0.3) tenkaiBonus *= 1.2; }
+      }
+      let styleBonus = 1.0;
+      if (useBank) { if (r1.B > 0.4) styleBonus *= bankBias.sengo; else styleBonus *= bankBias.sashi; }
+      let score = rawPower * tenkaiBonus * styleBonus;
+      totalScore += score;
+      return { comb: c.join('-'), rawScore: score, prob: 0 };
+    });
+    scoredCombs.forEach(item => { item.prob = item.rawScore / totalScore; });
+    const oddMap = {}; unified.odds.forEach(o => oddMap[o.c] = o.o);
+    const maxRealOdds = unified.odds.length > 0 ? Math.max(...unified.odds.map(o => o.o)) : 1.0;
+
+    const useEst = document.getElementById('ckEst').checked; 
+    let results = [];
+    let mapped = scoredCombs.map(item => {
+      let o = oddMap[item.comb];
+      if (!o && useEst) { 
+        if(item.prob > 0) o = (1 / item.prob) * 0.75; else o = 0; 
+        if (o < maxRealOdds) o = maxRealOdds; 
+        if(o > 500) o = 500; 
+      }
+      let ev = item.prob * (o || 0);
+      return { ...item, oddsRef: o, ev: ev, realOdds: !!oddMap[item.comb] };
+    });
+    
+    if (mode === 'hit') results = mapped.sort((a,b) => b.prob - a.prob); 
+    else results = mapped.filter(x => x.prob > 0.000001).sort((a,b) => b.ev - a.ev);
+
+    let limit = +document.getElementById('numPicks').value;
+    let html = `<table class="prediction-table"><thead><tr><th>#</th><th>買い目</th><th>${mode==='kelly'?'EV':'率'}</th><th>オッズ</th><th>判定</th></tr></thead><tbody>`;
+    results.slice(0, limit).forEach((s, i) => {
+      let o = s.oddsRef, dispO = o ? o.toFixed(1) : '—'; 
+      if(!s.realOdds && useEst) dispO += '<span class="tag-est">推</span>';
+      
+      let mainVal = mode === 'hit' ? (s.prob*100).toFixed(1)+'%' : s.ev.toFixed(2);
+      let style = s.ev >= 1.5 ? 'color:#dc2626' : (s.ev >= 1.0 ? 'color:#2563eb' : 'color:#64748b');
+      let judge = '';
+      if(mode === 'kelly') { if(s.ev >= 1.5) judge = '<span class="judge-badge fire">激熱</span>'; else if(s.ev >= 1.0) judge = '<span class="judge-badge ok">投資</span>'; else judge = '<span style="font-size:10px;color:#cbd5e1">見</span>'; } 
+      else { if(s.prob > 0.15) judge = '<span class="judge-badge ok">本命</span>'; else if(s.prob > 0.05) judge = '<span class="judge-badge">対抗</span>'; else judge = '<span style="font-size:10px;color:#cbd5e1">穴</span>'; }
+      let rowClass = (unified.result.join('-') === s.comb) ? 'win-row' : '';
+      html += `<tr class="${rowClass}"><td>${i+1}</td><td class="mono" style="font-weight:700">${s.comb}</td><td style="${style} font-weight:bold">${mainVal}</td><td>${dispO}</td><td>${judge}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    
+    // HTML更新と高さロック解除
+    out.innerHTML = html;
+    out.style.minHeight = ''; 
+  }, 100); 
+}
+
+/* DB Logic */
+const DB_NAME = 'KeirinKaiX_DB'; const STORE = 'learn'; let db;
+function initDB() {
+  const req = indexedDB.open(DB_NAME, 1);
+  req.onupgradeneeded = e => { e.target.result.createObjectStore(STORE, {keyPath:'id', autoIncrement:true}); };
+  req.onsuccess = e => { db = e.target.result; updateLearnUI(); };
+  req.onerror = e => { console.error("DB Error: " + e.target.error); };
+}
+async function saveLearn() {
+  if(!db) return;
+  if(!unified || !unified.result.length) return;
+  let now = new Date();
+  let tsStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+  let tx = db.transaction(STORE, 'readwrite');
+  let rec = { ...unified, saveTs: tsStr };
+  tx.objectStore(STORE).add(rec);
+  tx.oncomplete = () => { 
+    showToast('学習データを保存しました'); 
+    updateLearnUI(); 
+  };
+}
+async function updateLearnUI() {
+  if(!db) return;
+  let tx = db.transaction(STORE, 'readonly');
+  let all = await new Promise(r => { let req = tx.objectStore(STORE).getAll(); req.onsuccess = () => r(req.result); });
+  document.getElementById('learnCount').textContent = all.length;
+  const sel = document.getElementById('selDel'); sel.innerHTML = '';
+  const box = document.getElementById('saveInfoBox');
+  if(all.length > 0) {
+      let last = all[all.length-1];
+      document.getElementById('lsTime').textContent = last.saveTs;
+      document.getElementById('lsVenue').textContent = `${last.date} ${last.venue} ${last.race}R`;
+  } else {
+      document.getElementById('lsTime').textContent = '—';
+      document.getElementById('lsVenue').textContent = '—';
+  }
+  all.slice(-20).reverse().forEach(r => { let op = document.createElement('option'); op.value = r.id; op.text = `${r.date} ${r.venue} ${r.race}R`; sel.add(op); });
+}
+
+document.getElementById('parse1').onclick = () => { document.getElementById('sec1').value=''; data1=null; doUnify(); };
+document.getElementById('parse2').onclick = () => { document.getElementById('sec2').value=''; data2=null; doUnify(); };
+['sec1','sec2'].forEach(id => { document.getElementById(id).addEventListener('input', (e) => { if(id==='sec1') data1 = parse1(e.target.value); if(id==='sec2') data2 = parse2(e.target.value); doUnify(); }); });
+document.getElementById('btnSave').onclick = saveLearn;
+document.getElementById('btnKelly').onclick = () => predict('kelly');
+document.getElementById('btnHit').onclick = () => predict('hit');
+document.getElementById('btnDelOne').onclick = () => { 
+  if(!db) return; let id=+document.getElementById('selDel').value; 
+  if(id){let tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);tx.oncomplete=updateLearnUI;} 
+};
+document.getElementById('btnDelAll').onclick = () => { 
+  if(!db) return; if(confirm('全データを削除しますか？')){let tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).clear();tx.oncomplete=updateLearnUI;} 
+};
+document.getElementById('btnExport').onclick = () => {
+    if(!db) return; let tx = db.transaction(STORE, 'readonly'); let req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => {
+        let blob = new Blob([JSON.stringify(req.result)], {type: "application/json"});
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a'); a.href=url; a.download='kai_learning_data.json'; a.click();
+        showToast('エクスポートが完了しました');
+    };
+};
+document.getElementById('fileImp').addEventListener('change', (e) => {
+    if(!db) return; const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+        try {
+            const data = JSON.parse(r.result);
+            if(Array.isArray(data)) {
+                let tx = db.transaction(STORE, 'readwrite');
+                data.forEach(item => tx.objectStore(STORE).add(item));
+                tx.oncomplete = () => { 
+                  showToast('インポートが完了しました'); 
+                  updateLearnUI(); 
+                };
+            }
+        } catch(err) { alert('読込エラー: ' + err); }
+    };
+    r.readAsText(f);
+});
+
+initDB();
+</script>
+</body>
+</html>
